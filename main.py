@@ -4,10 +4,20 @@
 # 4. Affichage des résultats
 # 5. Qualité du code, optimisation
 
+
+# =============================================================================
+# 1. Importation et préparation des données
+# =============================================================================
+
+import json
+
+with open("datas/employes-data.json", "r", encoding="utf-8") as f:
+    data : dict = json.load(f)
+
+
 # ============================================================================
 # 2. Calcul des salaires mensuels
 # ============================================================================
-
 
 def calcul_salaire_mensuel(employe: dict) -> float:
     """
@@ -30,37 +40,96 @@ def calcul_salaire_mensuel(employe: dict) -> float:
     if temps_de_travail > heures_contrat:
         ecart = temps_de_travail - heures_contrat
         salaire_hebdo += (salaire * 1.5) * ecart
-    # print(
-    #     f"{employe["name"]: <10} | {employe["job"]: <15} | salaire mensuel: {salaire_mensuel:.2f}€"
-    # )
 
     # Calcul du salaire mensuel
     salaire_mensuel: float = salaire_hebdo * 4
     return salaire_mensuel
 
-# =============================================================================
-# 1. Importation et préparation des données
-# =============================================================================
-import json
 
-with open("datas/employes-data.json", "r", encoding="utf-8") as f:
-    data : dict = json.load(f)
+# ============================================================================
+# 3. Calcul des statistiques salariales
+# ============================================================================
 
+def calcul_stats_filiale(rapport_salarial: dict,filiale:str) -> tuple:
+    """"""
+    salaire_max: float = 0
+    salaire_min: float = 1000000000000
+    salaire_total: float = 0
+    salaire_moyen: float = 0
+    count: int = 0
+
+    for ligne in rapport_salarial:
+        
+        salaire_total += ligne["salary"]
+        count += 1
+        
+        if ligne["salary"] > salaire_max:
+            salaire_max = ligne["salary"]
+        if ligne["salary"] < salaire_min:
+            salaire_min = ligne["salary"]
+
+    salaire_moyen = salaire_total / count
+
+    print(f"{"="*50}")
+    print(f"{filiale.upper()} : statistiques")
+    print(f"{"="*50}")
+    print(f"le salaire le plus élevé est {salaire_max:.2f}€")
+
+    print(f"le salaire le plus bas est {salaire_min:.2f}€")
+    print(f"le salaire moyen est de {salaire_moyen:.2f}€")
+    print(f"{"="*50}")
+    return salaire_min,salaire_max,salaire_moyen
+            
+
+def calcul_stats_entreprise(rapport_complet: dict)-> dict:
+    # print(rapport_complet)
+
+    salaire_max: float = 0
+    salaire_min: float = 1000000000000
+    salaire_total: float = 0
+    salaire_moyen: float = 0
+    count: int = 0
+
+    for filiale in rapport_complet:
+        
+        min, max, moyen = calcul_stats_filiale(rapport_complet[filiale],filiale)
+
+        salaire_total += moyen
+        count += 1
+
+        
+        
+        if max > salaire_max:
+            salaire_max = max
+        if min < salaire_min:
+            salaire_min = min
+
+    salaire_moyen = salaire_total / count
+
+    print(f"{"="*50}")
+    print(f"Entreprise : statistiques globales")
+    print(f"{"="*50}")
+    print(f"le salaire le plus élevé est {salaire_max:.2f}€")
+
+    print(f"le salaire le plus bas est {salaire_min:.2f}€")
+    print(f"le salaire moyen est de {salaire_moyen:.2f}€")
+    
+
+# ============================================================================
+# 4. Affichage des résultats
+# ============================================================================
 
 rapport: dict = {}
-# print(data)
 
 for filiale in data:
-    # print(filiale)
-    # print()
-    rapport[filiale] = []
+    cle = filiale.upper()
+    rapport[cle] = []
+    print(f"{"="*50}")
+    print(f"{cle} : Salaires mensuels")
+    print(f"{"="*50}")
     for line in data[filiale]:
-        # print(line)
-        # print(
-        #     f"{line["name"]: <12} | {line["job"]: <15} | {line["hourly_rate"]: <5} | {line["weekly_hours_worked"]: <5} | {line["contract_hours"]: <5}"
-        # )
         salaire = calcul_salaire_mensuel(line)
-        rapport[filiale].append(
+        rapport[cle].append(
             {
                 "name": line["name"],
                 "job": line["job"],
@@ -68,14 +137,22 @@ for filiale in data:
             }
         )
         print(
-            f"{line["name"]: <10} | {line["job"]: <15} | salaire mensuel: {salaire:.2f}€"
+            f"{line["name"]: <10} | {line["job"]: <15} | salaire mensuel: {salaire:>8.2f}€"
         )
-    # for key, value in line.items():
-    #     print(f"{key: <25} : {value}")
-    #     print(f"{value: <25} | ")
-    # print(key)
-    # print(value)
-    print()
-print(rapport)
-for filiale in rapport:
-    print(rapport[filiale])
+
+
+
+calcul_stats_entreprise(rapport)
+
+
+# print(rapport)
+# print()
+# stats: list = []
+# for filiale in rapport:
+#     stats.append({
+#         # "filiale": filiale,
+#         filiale: calcul_stats_filiale(rapport[filiale])})
+#     # print(rapport[filiale])
+
+# print(stats)
+# print()
